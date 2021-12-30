@@ -68,17 +68,38 @@ pub enum HuffmanTree {
     },
 }
 
-impl Display for HuffmanTree {
+struct HuffmanTreeShow<'a>(i32, &'a HuffmanTree);
+
+impl Display for HuffmanTreeShow<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
+        let depth = (0..self.0)
+            .map(|_| "|\t")
+            .fold(String::new(), |acc, x| acc + x);
+
+        match &self.1 {
             HuffmanTree::Leaf { symbol, weight } => write!(f, "({} {})", symbol, weight),
             HuffmanTree::Branch {
                 symbols,
                 weight,
                 left,
                 right,
-            } => write!(f, "({:?} {})\nl-{}\nr-{}", symbols, weight, left, right),
+            } => write!(
+                f,
+                "([{}] {})\n{}|-L:{}\n{}|-R:{}",
+                symbols.join(", "),
+                weight,
+                &depth,
+                &HuffmanTreeShow(self.0 + 1, left),
+                &depth,
+                &HuffmanTreeShow(self.0 + 1, right)
+            ),
         }
+    }
+}
+
+impl Display for HuffmanTree {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        HuffmanTreeShow(0, self).fmt(f)
     }
 }
 
@@ -237,13 +258,15 @@ impl HuffmanTree {
 
             sort_leafs(&mut trees);
 
-            while let Some((left, right)) = trees
-                .pop()
-                .and_then(|left| trees.pop().and_then(|right| Some((left.clone(), right.clone()))).or_else(|| {
-                    trees.push(left.clone());
-                    None
-                }))
-            {
+            while let Some((left, right)) = trees.pop().and_then(|left| {
+                trees
+                    .pop()
+                    .and_then(|right| Some((left.clone(), right.clone())))
+                    .or_else(|| {
+                        trees.push(left.clone());
+                        None
+                    })
+            }) {
                 trees.push(Self::make_code_tree(left, right));
                 sort_leafs(&mut trees);
             }
