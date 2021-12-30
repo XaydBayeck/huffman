@@ -40,4 +40,16 @@ fn main() {
     let encodes = tree1.encode(&decode_infor);
 
     println!("{}", encodes.format());
+
+    let encode_pair = ["A", "NA", "BOOM", "SHA", "GET", "YIP", "JOB", "WAH"]
+        .into_iter()
+        .map(|s| String::from(s))
+        .zip([2, 16, 1, 3, 2, 9, 2, 1].into_iter())
+        .collect::<Vec<(String, i32)>>();
+
+    println!("{:?}", &encode_pair);
+
+    let tree2 = HuffmanTree::generate_huffman_tree(&encode_pair);
+
+    println!("{:?}", &tree2);
 }

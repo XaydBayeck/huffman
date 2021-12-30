@@ -6,14 +6,14 @@ pub enum Code {
     One,
 }
 
-impl Code {
-    pub fn new(bit: i32) -> Self {
-        match bit {
-            0 => Self::Zero,
-            _ => Self::One,
-        }
-    }
-}
+// impl Code {
+//     pub fn new(bit: i32) -> Self {
+//         match bit {
+//             0 => Self::Zero,
+//             _ => Self::One,
+//         }
+//     }
+// }
 
 pub struct Codes(Vec<Code>);
 
@@ -27,9 +27,9 @@ impl Display for Code {
 }
 
 impl Codes {
-    pub fn from_int(bits: &[i32]) -> Self {
-        Self(bits.iter().map(|bit| Code::new(*bit)).collect())
-    }
+    // pub fn from_int(bits: &[i32]) -> Self {
+    //     Self(bits.iter().map(|bit| Code::new(*bit)).collect())
+    // }
 
     pub fn from_str(bits: &str) -> Self {
         Self(
@@ -208,6 +208,44 @@ impl HuffmanTree {
                         v
                     }),
             )
+        }
+    }
+
+    fn get_weight(&self) -> i32 {
+        match self {
+            HuffmanTree::Leaf { symbol: _, weight } => *weight,
+            HuffmanTree::Branch {
+                symbols: _,
+                weight,
+                left: _,
+                right: _,
+            } => *weight,
+        }
+    }
+
+    pub fn generate_huffman_tree(pairs: &[(String, i32)]) -> Option<Self> {
+        if pairs.is_empty() {
+            None
+        } else {
+            let mut trees = pairs
+                .iter()
+                .map(|(symbol, weight)| Self::make_leaf(symbol, *weight))
+                .collect::<Vec<Self>>();
+
+            let sort_leafs =
+                |leafs: &mut Vec<Self>| leafs.sort_by(|a, b| a.get_weight().cmp(&b.get_weight()));
+
+            sort_leafs(&mut trees);
+
+            while let Some((left, right)) = trees
+                .pop()
+                .and_then(|right| trees.pop().and_then(|left| Some((left, right))))
+            {
+                trees.push(Self::make_code_tree(left, right));
+                sort_leafs(&mut trees);
+            }
+
+            trees.pop()
         }
     }
 }
