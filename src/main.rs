@@ -29,15 +29,15 @@ fn main() {
     println!("{}", &tree1);
 
     let bits = Codes::from_str("011001011");
-    let decode_infor = tree1.decode(&bits);
+    let decode_information = tree1.decode(&bits);
 
     println!(
         "codes: {:?}, decode information: {:?}",
         bits.format(),
-        &decode_infor
+        &decode_information
     );
 
-    let encodes = tree1.encode(&decode_infor);
+    let encodes = tree1.encode(&decode_information);
 
     println!("{}", encodes.format());
 
@@ -49,7 +49,7 @@ fn main() {
 
     println!("{:?}", &encode_pair);
 
-    let tree2 = HuffmanTree::generate_huffman_tree(&encode_pair);
+    let tree2 = HuffmanTree::generate_huffman_tree(&encode_pair).unwrap();
 
-    println!("{:?}", &tree2);
+    println!("{}", &tree2);
 }

@@ -77,7 +77,7 @@ impl Display for HuffmanTree {
                 weight,
                 left,
                 right,
-            } => write!(f, "({:?} {})\n|-{}\n|-{}", symbols, weight, left, right),
+            } => write!(f, "({:?} {})\nl-{}\nr-{}", symbols, weight, left, right),
         }
     }
 }
@@ -186,7 +186,7 @@ impl HuffmanTree {
                 }
             } else {
                 panic!(
-                    "This symbol: {} is not totolly in this tree's symbols:{:?}",
+                    "This symbol: {} is not totally in this tree's symbols:{:?}",
                     input_symbol, symbols
                 )
             }
@@ -195,12 +195,12 @@ impl HuffmanTree {
         Codes(result)
     }
 
-    pub fn encode(&self, messege: &[String]) -> Codes {
-        if messege.is_empty() {
+    pub fn encode(&self, message: &[String]) -> Codes {
+        if message.is_empty() {
             Codes(vec![])
         } else {
             Codes(
-                messege
+                message
                     .iter()
                     .map(|symbol| self.encode_symbol(symbol))
                     .fold(vec![], |mut v, mut cs| {
@@ -233,13 +233,16 @@ impl HuffmanTree {
                 .collect::<Vec<Self>>();
 
             let sort_leafs =
-                |leafs: &mut Vec<Self>| leafs.sort_by(|a, b| a.get_weight().cmp(&b.get_weight()));
+                |leafs: &mut Vec<Self>| leafs.sort_by(|a, b| b.get_weight().cmp(&a.get_weight()));
 
             sort_leafs(&mut trees);
 
             while let Some((left, right)) = trees
                 .pop()
-                .and_then(|right| trees.pop().and_then(|left| Some((left, right))))
+                .and_then(|left| trees.pop().and_then(|right| Some((left.clone(), right.clone()))).or_else(|| {
+                    trees.push(left.clone());
+                    None
+                }))
             {
                 trees.push(Self::make_code_tree(left, right));
                 sort_leafs(&mut trees);
