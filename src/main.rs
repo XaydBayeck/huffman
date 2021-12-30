@@ -26,5 +26,18 @@ fn main() {
         ),
     );
 
-    println!("{}", &tree1)
+    println!("{}", &tree1);
+
+    let bits = Codes::from_str("011001011");
+    let decode_infor = tree1.decode(&bits);
+
+    println!(
+        "codes: {:?}, decode information: {:?}",
+        bits.format(),
+        &decode_infor
+    );
+
+    let encodes = tree1.encode(&decode_infor);
+
+    println!("{}", encodes.format());
 }
