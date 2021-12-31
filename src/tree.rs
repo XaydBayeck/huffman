@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+/// 用于表示二进制编码
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Code {
     Zero,
@@ -15,6 +16,8 @@ pub enum Code {
 //     }
 // }
 
+/// 二进制编码序列`Vec<Code>`的包装
+#[derive(Debug, PartialEq)]
 pub struct Codes(Vec<Code>);
 
 impl Display for Code {
@@ -31,6 +34,22 @@ impl Codes {
     //     Self(bits.iter().map(|bit| Code::new(*bit)).collect())
     // }
 
+    /// 从形如`"101001001"`类似的字符串生成`Codes`
+    ///
+    /// # Panics
+    ///
+    /// Panics if `bits` contains char which is not `'0'` or `'1'`
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use self::Code::*;
+    ///
+    /// let codes = Codes::from_str("10011001");
+    ///
+    /// assert_eq!(codes， Codes(vec![One, Zero, Zero, One, One, Zero, Zero, One]))
+    /// ```
+    ///
     pub fn from_str(bits: &str) -> Self {
         Self(
             bits.chars()
@@ -43,6 +62,18 @@ impl Codes {
         )
     }
 
+    /// 将`Cdoes`以形如`"1001001010110"`类似的形式输出
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use self::Code::*;
+    ///
+    /// let codes = Codes::from_str("1001001010110");
+    /// let codes_str = codes.format();
+    ///
+    /// assert_eq!(&codes_str, "1001001010110")
+    /// ```
     pub fn format(&self) -> String {
         self.0
             .iter()
@@ -54,6 +85,54 @@ impl Codes {
     }
 }
 
+/// 表示Huffman编码的二叉树结构
+///
+/// # Examples
+///
+/// 你可以通过``一张权重表来生成`HuffmanTree`
+///
+/// 1. 构建权重表
+///
+/// ```rust
+/// let encode_pair =
+/// [("A", 2),
+/// ("NA", 16),
+/// ("BOOM", 1),
+/// ("SHA", 3),
+/// ("GET", 2),
+/// ("YIP", 9),
+/// ("JOB", 2),
+/// ("WAH", 1)]
+///
+/// 2. 生成`HuffmanTree`
+///
+/// ```rust
+/// let tree = HuffmanTree::generate_huffman_tree(&encode_pair).unwrap();
+///
+/// println!("{}", &tree);
+///
+/// ```
+///
+/// - Output
+/// ```
+/// ([NA, YIP, WAH, BOOM, JOB, SHA, GET, A] 36)
+/// |-L:(NA 16)
+/// |-R:([YIP, WAH, BOOM, JOB, SHA, GET, A] 20)
+/// |    |-L:(YIP 9)
+/// |    |-R:([WAH, BOOM, JOB, SHA, GET, A] 11)
+/// |    |    |-L:([WAH, BOOM, JOB] 4)
+/// |    |    |    |-L:([WAH, BOOM] 2)
+/// |    |    |    |    |-L:(WAH 1)
+/// |    |    |    |    |-R:(BOOM 1)
+/// |    |    |    |-R:(JOB 2)
+/// |    |    |-R:([SHA, GET, A] 7)
+/// |    |    |    |-L:(SHA 3)
+/// |    |    |    |-R:([GET, A] 4)
+/// |    |    |    |    |-L:(GET 2)
+/// |    |    |    |    |-R:(A 2)
+///
+/// ```
+///
 #[derive(Debug, Clone)]
 pub enum HuffmanTree {
     Leaf {
@@ -68,6 +147,7 @@ pub enum HuffmanTree {
     },
 }
 
+/// 专门用于格式化输出Huffman编码树的包装类
 struct HuffmanTreeShow<'a>(i32, &'a HuffmanTree);
 
 impl Display for HuffmanTreeShow<'_> {
@@ -104,6 +184,7 @@ impl Display for HuffmanTree {
 }
 
 impl HuffmanTree {
+    /// 用一个`symbol: &str`和`weight: i32`来生成一个叶节点
     pub fn make_leaf(symbol: &str, weight: i32) -> Self {
         HuffmanTree::Leaf {
             symbol: String::from(symbol),
@@ -111,6 +192,7 @@ impl HuffmanTree {
         }
     }
 
+    /// 用俩个`HuffmanTree`分别作为左子树、右子树自动归并生成一棵新树
     pub fn make_code_tree(left: HuffmanTree, right: HuffmanTree) -> Self {
         let (mut left_symbols, left_weight) = left.get_weight_and_symbols();
         let (mut right_symbols, right_weight) = right.get_weight_and_symbols();
@@ -125,6 +207,7 @@ impl HuffmanTree {
         }
     }
 
+    /// 获取当前`HuffmanTree`节点的符号表和权重（当当前节点为叶节点时，会将该叶节点的符号装入一个`Vec`中）
     fn get_weight_and_symbols(&self) -> (Vec<String>, i32) {
         match self {
             HuffmanTree::Leaf { symbol, weight } => (vec![symbol.clone()], weight.clone()),
@@ -137,6 +220,18 @@ impl HuffmanTree {
         }
     }
 
+    /// 对`0`、`1`序列进行解码
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let tree = ...;
+    ///
+    /// let codes = Codes::from_str("1001000110");
+    ///
+    /// let decode_message = tree.decode(&codes);
+    ///
+    /// ```
     pub fn decode(&self, bits: &Codes) -> Vec<String> {
         let mut current_branch = self;
         let mut result = vec![];
@@ -154,6 +249,7 @@ impl HuffmanTree {
         result
     }
 
+    /// 当`bit`为`Zero`时选择左子树;当`bit`为`One`时选择右子树
     fn choose_branch(&self, bit: &Code) -> &Self {
         if let Self::Branch {
             symbols: _,
@@ -171,6 +267,7 @@ impl HuffmanTree {
         }
     }
 
+    /// 获取当前节点的符号表
     fn get_symbols(&self) -> Vec<String> {
         match self {
             HuffmanTree::Leaf { symbol, weight: _ } => vec![symbol.to_string()],
@@ -183,6 +280,11 @@ impl HuffmanTree {
         }
     }
 
+    /// 得到`input_symbol`在当前`HuffmanTree`中的编码
+    ///
+    /// # Panics
+    ///
+    /// 当`input_symbol`不在树中或者树的编码存在错误的情况下发生 **Panics**
     fn encode_symbol(&self, input_symbol: &String) -> Codes {
         let mut result = vec![];
 
@@ -216,6 +318,7 @@ impl HuffmanTree {
         Codes(result)
     }
 
+    /// 将输入的数据用当前的树进行编码
     pub fn encode(&self, message: &[String]) -> Codes {
         if message.is_empty() {
             Codes(vec![])
@@ -232,6 +335,7 @@ impl HuffmanTree {
         }
     }
 
+    /// 获取当前节点的权重
     fn get_weight(&self) -> i32 {
         match self {
             HuffmanTree::Leaf { symbol: _, weight } => *weight,
@@ -244,6 +348,13 @@ impl HuffmanTree {
         }
     }
 
+    /// 通过符号权重表生成一棵`HuffmanTree`
+    ///
+    /// # Return Option
+    ///
+    /// - **`None`** : 当输入的表为空时
+    /// - **`Some(HuffmanTree)`** : 其他情况
+    ///
     pub fn generate_huffman_tree(pairs: &[(String, i32)]) -> Option<Self> {
         if pairs.is_empty() {
             None
@@ -273,5 +384,60 @@ impl HuffmanTree {
 
             trees.pop()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn code_from_str_test() {
+        use Code::*;
+
+        let codes = Codes::from_str("100110110101");
+
+        assert_eq!(
+            codes,
+            Codes(vec![
+                One, Zero, Zero, One, One, Zero, One, One, Zero, One, Zero, One
+            ])
+        )
+    }
+
+    #[test]
+    fn codes_format_test() {
+        let codes = Codes::from_str("100110110101");
+
+        assert_eq!(&codes.format(), "100110110101");
+    }
+
+    #[test]
+    fn huffman_tree_decode_encode_test() {
+        let tree = HuffmanTree::generate_huffman_tree(
+            &[
+                ("A", 8),
+                ("B", 3),
+                ("C", 1),
+                ("D", 1),
+                ("E", 1),
+                ("F", 1),
+                ("G", 1),
+                ("H", 1),
+            ]
+            .map(|(s, i)| (String::from(s), i)),
+        )
+        .unwrap();
+
+        let unencode_message = vec!["A", "E", "D"]
+            .into_iter()
+            .map(|s| String::from(s))
+            .collect::<Vec<String>>();
+
+        let encode_bits = tree.encode(&unencode_message);
+
+        let decode_message = tree.decode(&encode_bits);
+
+        assert_eq!(decode_message, unencode_message)
     }
 }

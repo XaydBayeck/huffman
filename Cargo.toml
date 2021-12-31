@@ -1,7 +1,11 @@
 [package]
 name = "huffman"
 version = "0.1.0"
+description = "A package a bout huffman encode which follow the guide of SICP"
 edition = "2021"
+authors = ["Sid <SidBayeck@outlook.com>"]
+keywords = ["encode", "huffman"]
+license = "GPL V2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

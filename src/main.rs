@@ -52,4 +52,15 @@ fn main() {
     let tree2 = HuffmanTree::generate_huffman_tree(&encode_pair).unwrap();
 
     println!("{}", &tree2);
+
+    let bits = Codes::from_str("0110101000111010100111101011001");
+    let decode_message = tree2.decode(&bits);
+
+    println!(
+        "codes: {:?}, decode message: {:?}",
+        bits.format(),
+        &decode_message
+    );
+
+    println!("{}", tree2.encode(&decode_message).format())
 }
